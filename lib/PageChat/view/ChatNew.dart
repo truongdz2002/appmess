@@ -33,6 +33,7 @@ class _ChatNew extends State<ChatNew> {
   async {
     if(_messageController.text.isNotEmpty)
       {
+        //
         await _chatService.sendMessage(widget.receiverUserId, _messageController.text);
        _messageController.clear();
         scrollToBottom();
