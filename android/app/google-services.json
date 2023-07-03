@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "421757948599",
+    "project_id": "appmess-41bfb",
+    "storage_bucket": "appmess-41bfb.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:421757948599:android:25ccfc03e72aba6e653332",
+        "android_client_info": {
+          "package_name": "com.example.appmess"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "421757948599-ee0lhbbjvrbpmsqpbnt7pjb4689u20iv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDPDU73roHmsNrRTjTbXN-kSHtlt_oCRe4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "421757948599-ee0lhbbjvrbpmsqpbnt7pjb4689u20iv.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
