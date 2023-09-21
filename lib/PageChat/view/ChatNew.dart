@@ -1,9 +1,11 @@
-// Copyright 2020, the Flutter project authors. Please see the AUTHORS file
-// for details. All rights reserved. Use of this source code is governed by a
-// BSD-style license that can be found in the LICENSE file.
 
+
+
+
+import 'dart:developer';
 
 import 'package:appmess/service/ChatService.dart';
+import 'package:appmess/test_library/NotificationController.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../controller/MessageBubble.dart';
@@ -12,7 +14,8 @@ import '../controller/MessageBubble.dart';
 class ChatNew extends StatefulWidget {
   final String receiverUserEmail;
   final String receiverUserId;
-  const ChatNew({super.key, required this.receiverUserEmail, required this.receiverUserId,});
+  final List<String> receiverTokenDevice;
+  const ChatNew({super.key, required this.receiverUserEmail, required this.receiverUserId, required this.receiverTokenDevice,});
 
   @override
   State<ChatNew> createState() => _ChatNew();
@@ -21,8 +24,9 @@ class ChatNew extends StatefulWidget {
 class _ChatNew extends State<ChatNew> {
   bool visibilityIconButton=false;
   final Color colorChangeIcons = Colors.orangeAccent;
+   late      bool clickBtnAdd=false;
   final ChatService _chatService=ChatService();
-  final Color colorChangeTool=Colors.blue;
+  final Color colorChangeTool=Colors.white;
   final TextEditingController _messageController=TextEditingController();
   final FirebaseAuth _auth=FirebaseAuth.instance;
   final List<Color> colorLeft=[const Color(0xFF6C7689), const Color(0xFF3A364B)];
@@ -35,9 +39,11 @@ class _ChatNew extends State<ChatNew> {
       {
         //
         await _chatService.sendMessage(widget.receiverUserId, _messageController.text);
-       _messageController.clear();
         scrollToBottom();
+        sendMessageWithToken();
+        _messageController.clear();
       }
+
   }
   void scrollToBottom() {
         _scrollController.animateTo(
@@ -46,6 +52,14 @@ class _ChatNew extends State<ChatNew> {
         curve: Curves.easeOut,
       );
 
+  }
+  void sendMessageWithToken()
+  {
+    for(var token in widget.receiverTokenDevice)
+    {
+      NotificationController.sendAndroidNotification('Đỗ Đăng Trường',_messageController.text,token);
+
+    }
   }
   @override
   void initState() {
@@ -61,11 +75,14 @@ class _ChatNew extends State<ChatNew> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true,
-        backgroundColor:Colors.grey,
+        backgroundColor:colorChangeTool,
         appBar:AppBar(
           title: _customTitle(),
-          backgroundColor:colorChangeTool ,
+          backgroundColor:colorChangeTool,
           automaticallyImplyLeading: false,
+          shape:const ContinuousRectangleBorder(
+        borderRadius:BorderRadius.only(bottomLeft:Radius.circular(20),bottomRight: Radius.circular(20))),
+          shadowColor: Colors.blue,
           actions: [
             IconButton(onPressed: (){}, icon: Icon(Icons.call,color: colorChangeIcons,)),
             IconButton(onPressed: (){}, icon: Icon(Icons.video_camera_back_outlined,color: colorChangeIcons)),
@@ -73,76 +90,121 @@ class _ChatNew extends State<ChatNew> {
 
           ],
         ),
-        body: SafeArea(
-          child: Column(
-            children: [
-              Expanded(child: _buildMessageList()),
-              _customToolChat()
-            ],
-          ),
+        body: Column(
+          children: [
+            Expanded(
+              child: InkWell(
+                onTap: ()
+                {
+                  setState(() {
+                    clickBtnAdd=false;
+                  });
+                },
+                child: Stack(
+                  children: [
+                     _buildMessageList(),
+                    clickBtnAdd ?
+                        Positioned(
+                          bottom: 0,
+                          left: 35,
+                          child: Container(
+                            width: 152,
+                            height: 56,
+                            decoration: BoxDecoration(
+                                color: Colors.grey[200],
+                                borderRadius: const BorderRadius.only(topRight:Radius.circular(20),topLeft:Radius.circular(20),bottomRight: Radius.circular(20) )
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  height: 40,
+                                    width: 40,
+                                    decoration: BoxDecoration(
+                                        color:Colors.blue,
+                                        borderRadius: BorderRadius.circular(10)
+                                    ),
+                                    child: IconButton(onPressed:(){}, icon: Icon(Icons.image,color: colorChangeIcons,size:24))),
+                                const SizedBox(width: 20,),
+                                Container(
+                                    height: 40,
+                                    width: 40,
+                                    decoration: BoxDecoration(
+                                        color:Colors.blue,
+                                        borderRadius: BorderRadius.circular(10)
+                                    ),
+                                    child: IconButton(onPressed:(){}, icon: Icon(Icons.link,color: colorChangeIcons,size: 24,))),
+                              ],
+                            ),
+                          )
+                        ):Container()
+
+                  ],
+                ),
+              ),
+            ),
+
+                _customToolChat(),
+
+
+          ],
         ),
+
     );
   }
 
   _customToolChat()=>Container(
-    color: colorChangeTool,
+    height:56 ,
+    width:double.infinity,
+    color:  Colors.grey[50],
     padding: const EdgeInsets.symmetric(horizontal: 8.0),
     child: Row(
       children: [
-        Visibility(
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(15)
+          ),
           // visible: visibilityIconButton,
           child: IconButton(
-            icon: Icon(Icons.apps,color:colorChangeIcons ,),
-            onPressed: () {},
+            icon: Icon(Icons.add,color:colorChangeIcons ,),
+            onPressed: () {
+              setState(() {
+                clickBtnAdd=true;
+              });
+            },
           ),
         ),
-        Visibility(
-          // visible: visibilityIconButton,
-          child: IconButton(
-            icon: Icon(Icons.camera_alt,color:colorChangeIcons),
-            onPressed: () {},
+        Container(
+          height: 40,
+          width: 243,
+          margin: const EdgeInsets.only(left:30),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            color: Colors.white,
           ),
-        ),
-        Visibility(
-          // visible: visibilityIconButton,
-          child: IconButton(
-            icon: Icon(Icons.image,color:colorChangeIcons),
-            onPressed: () {},
-          ),
-        ),
-        Visibility(
-          //visible: visibilityIconButton,
-          child: IconButton(
-            icon:  Icon(Icons.mic,color:colorChangeIcons),
-            onPressed: () {},
-          ),
-        ),
-        Expanded(
-          child: Container(
-            margin: const EdgeInsets.all(3),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              color: Colors.white.withOpacity(0.4),
-            ),
-            child: Center(
-              child: TextField(
-                onTap: scrollToBottom,
-                cursorColor: Colors.black,
-                controller:_messageController,
-                decoration: InputDecoration(
-                    hintText: '  Aa',
-                    enabled: true,
-                    contentPadding: const EdgeInsets.all( 10),
-                    border: InputBorder.none,
-                    suffixIcon:IconButton(onPressed:(){}, icon:Icon(Icons.emoji_emotions,color:colorChangeIcons))
-                ),
-              ),
+          child: Center(
+            child: TextField(
+              onTap: scrollToBottom,
+              cursorColor: Colors.black,
+              controller:_messageController,
+              keyboardType: TextInputType.multiline,
+              maxLines: 10,
+              minLines: 1,
+              decoration:  const InputDecoration.collapsed(hintText: "Send a message"),
             ),
           ),
         ),
-        IconButton(
-            icon:  Icon(Icons.emoji_events_rounded,color:colorChangeIcons,),
-            onPressed: sendMessage
+        Container(
+          margin: const EdgeInsets.only(left: 20),
+          decoration: BoxDecoration(
+            color: Colors.blue,
+            borderRadius: BorderRadius.circular(15)
+          ),
+          child: IconButton(
+              icon:  Icon(Icons.send,color:colorChangeIcons,),
+              onPressed: sendMessage
+          ),
         ),
       ],
     ),
@@ -153,20 +215,44 @@ class _ChatNew extends State<ChatNew> {
         {
           Navigator.pop(context);
         }, icon:Icon(Icons.arrow_back_ios,color:colorChangeIcons,),),
-        CircleAvatar(
-          backgroundColor:Colors.white,
-          backgroundImage:const AssetImage(
-              'assets/imagesgai.jpg'
-          ),
-          child:Container(),
+        Stack(
+          children: [
+            CircleAvatar(
+              backgroundColor:Colors.white,
+              backgroundImage:const AssetImage(
+                  'assets/imagesgai.jpg'
+              ),
+              child:Container(),
+            ),
+                Positioned(
+                bottom: 0,
+                right: 0,
+                child: Container(
+                  width: 10,
+                height: 10,
+                padding: const EdgeInsets.all(3),
+                decoration:  const BoxDecoration(
+                color: Colors.green,
+                shape: BoxShape.circle,
+                ),))
+          ],
         ),
-        Padding(
-          padding: const EdgeInsets.all(4.0),
-          child: Text(widget.receiverUserEmail,style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-              color: Colors.white
-          ),),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 8,top: 4),
+              child: Text(widget.receiverUserEmail,style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: Colors.black
+              ),),
+            ),
+            const Padding(
+              padding: EdgeInsets.only(left: 8,top: 4),
+              child: Text('Đang hoạt động ',style: TextStyle(fontSize: 13,color: Colors.grey),),
+            )
+          ],
         )
       ],);
   Widget _buildMessageList()
@@ -181,10 +267,33 @@ class _ChatNew extends State<ChatNew> {
         {
           return const Text('.....Loading');
         }
-      return ListView(
+
+      WidgetsBinding.instance?.addPostFrameCallback((_) {
+        scrollToBottom();
+      });
+
+      return ListView.builder(
         controller: _scrollController,
-        children: snapshot.data!.docs.map((e)=>MessageBubble(document: e,colorLeft: colorLeft,colorRight: colorRight,)).toList(),
+        itemCount: snapshot.data!.docs.length,
+        itemBuilder: (context, index) {
+          final document = snapshot.data!.docs[index];
+          return MessageBubble(document: document, colorLeft: colorLeft, colorRight: colorRight);
+        },
       );
+    });
+  }
+  _builderBottomSheet(BuildContext context)
+  {
+    return showModalBottomSheet(context: context, builder:(context)
+    {
+      double gridWidth = 100;
+      double gridHeight = 100;
+      double ratio = gridWidth / gridHeight;
+      return GridView.count(childAspectRatio: ratio,
+          crossAxisCount: 3,
+          mainAxisSpacing: 5.0,
+          crossAxisSpacing: 5.0,
+          children:const []);
     });
   }
 }

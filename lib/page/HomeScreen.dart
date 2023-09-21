@@ -1,9 +1,13 @@
 
 
+import 'dart:developer';
+
 import 'package:appmess/PageChat/view/ChatNew.dart';
+import 'package:appmess/requestPermission/RequestPermisstion.dart';
 import 'package:appmess/service/AuthService.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -17,6 +21,10 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final GlobalKey<ScaffoldState> _globalKey=GlobalKey();
   final FirebaseAuth _auth=FirebaseAuth.instance;
+  final Color colorIcons=const Color(0xFF0C0B0B);
+  final Color colorBackground=const Color(0xFFE7E2E2);
+  final Color colorTitleClick=const Color(0xFF0C0B0B);
+  final RequestPermission requestPermission=RequestPermission();
   late final AuthService authService;
   Future<void> signOut()
   async {
@@ -24,6 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
   @override
   void initState() {
+    requestPermission.request();
      authService=Provider.of<AuthService>(context,listen: false);
     super.initState();
   }
@@ -31,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: _globalKey,
-      backgroundColor: const Color(0xFF171717),
+      backgroundColor: colorBackground,
       body:Stack(
         children: [
           Column(
@@ -45,14 +54,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         onPressed: (){
                           _globalKey.currentState!.openDrawer();
                         },
-                        icon: const Icon(
+                        icon:  Icon(
                           Icons.menu,
-                          color: Colors.white,)),
+                          color: colorIcons)),
                     IconButton(
                         onPressed: (){},
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.search,
-                          color: Colors.white,))
+                          color:colorIcons,))
                   ],
                 ),
               ),
@@ -64,9 +73,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     TextButton(
                         onPressed: (){}, 
-                        child: const Text('Messages',
+                        child:  Text('Messages',
                           style: TextStyle(
-                            color: Colors.white
+                            color: colorTitleClick
                           ),)),
                     const SizedBox(width: 35,),
                     TextButton(
@@ -118,6 +127,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               child: Column(
                 children: [
+                  SizedBox(
+                    height: 45,
+                    child: Padding(
+                      padding: const EdgeInsets.all(2.0),
+                      child: TextField(
+                        decoration: InputDecoration(
+                          labelText: 'Tìm kiếm cuộc trò chuyện',
+                          suffixIcon: const Icon(Icons.search),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(15.0),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -157,9 +181,9 @@ class _HomeScreenState extends State<HomeScreen> {
               bottom: 0,
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 15),
-                decoration: const BoxDecoration(
-                color: Color(0xFFEFFFFC),
-                  borderRadius: BorderRadius.only(
+                decoration:  BoxDecoration(
+                color: colorBackground,
+                  borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(40),
                       topRight: Radius.circular(40))
           ),
@@ -258,12 +282,18 @@ class _HomeScreenState extends State<HomeScreen> {
           return const Text('loading...');
         }
       return ListView(
-        padding: const EdgeInsets.only(left: 25),
+        padding: const EdgeInsets.only(left: 20,right: 20),
         children: snapshot.data!.docs.map((doc) {
           Map<String,dynamic> data=doc.data()! as  Map<String,dynamic>;
           if(_auth.currentUser!.email!=data['email'])
             {
-              return buildConversationRow(data['uid'],data['name'],'hellllllllllllllllo','imagesgai.jpg',5);
+              // Lấy danh sách token từ Firestore
+              List<dynamic> tokensDynamic = data['token device'];
+
+          // Chuyển đổi danh sách động thành danh sách chuỗi
+              List<String> tokens = tokensDynamic.cast<String>();
+              log(tokens.toString());
+              return buildConversationRow(data['uid'],data['name'],'hellllllllllllllllo','imagesgai.jpg',5,tokens);
             }
           return Container();
         }
@@ -271,53 +301,61 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     });
   }
-  Widget buildConversationRow(String uid,String name,String message ,String filename,int msgCount)
+  Widget buildConversationRow(String uid,String name,String message ,String filename,int msgCount,List<String> tokenDevice)
   {
     return GestureDetector(
       onTap: ()
       {
-        Navigator.push(context,MaterialPageRoute(builder: (_)=>ChatNew(receiverUserEmail:name,receiverUserId: uid)));
+        Navigator.push(context,MaterialPageRoute(builder: (_)=>ChatNew(receiverUserEmail:name,receiverUserId: uid, receiverTokenDevice: tokenDevice,)));
       },
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  UserAvatar(fileName:filename),
-                  const SizedBox(width: 15),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(name,style: const TextStyle(color: Colors.black),),
-                      const SizedBox(height: 5,),
-                      Text(message,style: const TextStyle(color: Colors.black),)
-                    ],
-                  ),
-                ],
-              ),
-              Padding(
-                padding: const EdgeInsets.only(right: 25,top: 5),
-                child: Column(
+      child: Container(
+        height: 74,
+        width: 320,
+        decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(15.0)
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
                   children: [
-                    const Text('16:35',style: TextStyle(fontSize: 10),),
-                    const SizedBox(height: 15,),
-                    if(msgCount>0)
-                    CircleAvatar(
-                      radius: 7,
-                      backgroundColor: Colors.greenAccent,
-                      child: Text(msgCount.toString(),style: const TextStyle(fontSize: 10,color: Colors.white),),
-                    )
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: UserAvatar(fileName:filename),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(name,style: const TextStyle(color: Colors.black),),
+                        const SizedBox(height: 5,),
+                        Text(message,style: const TextStyle(color: Colors.black),)
+                      ],
+                    ),
                   ],
                 ),
-              )
-            ],
-          ),
-          const Divider(
-            indent: 70,
-          )
-        ],
+                Padding(
+                  padding: const EdgeInsets.all(5),
+                  child: Column(
+                    children: [
+                      const Text('16:35',style: TextStyle(fontSize: 10),),
+                      const SizedBox(height: 15,),
+                      if(msgCount>0)
+                      CircleAvatar(
+                        radius: 7,
+                        backgroundColor: Colors.greenAccent,
+                        child: Text(msgCount.toString(),style: const TextStyle(fontSize: 10,color: Colors.white),),
+                      )
+                    ],
+                  ),
+                )
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -341,11 +379,29 @@ class UserAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CircleAvatar(
-      backgroundColor: Colors.white,
-      child: CircleAvatar(radius: 29,
-        backgroundImage: Image.asset('assets/$fileName').image,),
-    );
+    return Stack(
+        children: [
+          CircleAvatar(
+            backgroundColor:Colors.white,
+            backgroundImage:const AssetImage(
+                'assets/imagesgai.jpg'
+            ),
+            child:Container(),
+          ),
+          Positioned(
+              bottom: 0,
+              right: 0,
+              child: Container(
+                width: 10,
+                height: 10,
+                padding: const EdgeInsets.all(3),
+                decoration:  const BoxDecoration(
+                  color: Colors.green,
+                  shape: BoxShape.circle,
+                ),))
+        ],
+      );
+
   }
 }
 class DrawItem extends StatelessWidget {

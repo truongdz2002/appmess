@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 
 class AuthService extends ChangeNotifier {
@@ -21,6 +22,7 @@ class AuthService extends ChangeNotifier {
 
   Future<UserCredential> sigUpWithEmailPassWord(String email, String passWord,
       String nameUser) async {
+    String? token = await FirebaseMessaging.instance.getToken();
     try {
       UserCredential userCredential = await _firebaseAuth
           .createUserWithEmailAndPassword(email: email, password: passWord);
@@ -29,10 +31,10 @@ class AuthService extends ChangeNotifier {
           {
             'uid': userCredential.user!.uid,
             'email': email,
-            'name': nameUser
+            'name': nameUser,
+            'token device':[token]
           }
       );
-
       return userCredential;
     } on FirebaseAuthException catch (e) {
       throw Exception(e.code);

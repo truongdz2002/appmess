@@ -1,3 +1,4 @@
+
 import 'package:appmess/PageChat/Entity/Message.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -12,8 +13,7 @@ class ChatService extends ChangeNotifier {
     final currentUserId=_auth.currentUser!.uid;
     final String currentUserEmail=_auth.currentUser!.email.toString();
     final Timestamp timestamp=Timestamp.now();
-
-   Message  messages= Message(senderId: currentUserId, senderEmail: currentUserEmail, receiverId: receiverId, message: message, timestamp: timestamp);
+   Message  messages= Message(senderId: currentUserId, senderEmail: currentUserEmail, receiverId: receiverId, message: message, timestamp: timestamp,seen:false,send: false, tokenDevice: []);
 
   List<String> ids=[currentUserId,receiverId];
   ids.sort();
@@ -27,6 +27,7 @@ class ChatService extends ChangeNotifier {
     String chatRoomId=ids.join("_");
     return _firebaseFirestore.collection('chat_rooms').doc(chatRoomId).collection('messages').orderBy('timestamp',descending: false).snapshots();
   }
+
 
 
 }
