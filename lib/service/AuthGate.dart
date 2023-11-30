@@ -1,4 +1,5 @@
-import 'package:appmess/page/HomeScreen.dart';
+import 'package:appmess/api/Api.dart';
+import 'package:appmess/screen/HomeScreen.dart';
 import 'package:appmess/service/LoginOrRegister.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -11,7 +12,7 @@ class AuthGate extends StatelessWidget {
 
     return Scaffold(
       body: StreamBuilder(
-          stream: FirebaseAuth.instance.authStateChanges(),
+          stream: Apis.firebaseAuth.authStateChanges(),
           builder: (context,snapshot){
         if(snapshot.hasData)
           {

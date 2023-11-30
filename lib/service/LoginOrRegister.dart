@@ -1,5 +1,5 @@
-import 'package:appmess/page/LoginScreen.dart';
-import 'package:appmess/page/RegisterScreen.dart';
+import 'package:appmess/screen/auth/LoginScreen.dart';
+import 'package:appmess/screen/auth/RegisterScreen.dart';
 import 'package:flutter/material.dart';
 
 class LoginOrRegister extends StatefulWidget {
